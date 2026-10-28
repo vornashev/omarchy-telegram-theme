@@ -37,6 +37,11 @@ class ThemeTests(unittest.TestCase):
                     opacity = int(value[7:], 16) / 255
                     composite = theme.blend('#ffffff', value[:7], opacity)
                     self.assertGreaterEqual(theme.contrast(resolve(foreground), composite), 4.5)
+                for foreground, background in [('toastFg', 'toastBg'), ('tooltipFg', 'tooltipBg'), ('importantTooltipFg', 'importantTooltipBg'), ('importantTooltipFgLink', 'importantTooltipBg')]:
+                    value = resolve(background)
+                    opacity = int(value[7:], 16) / 255 if len(value) == 9 else 1
+                    composite = theme.blend('#ffffff', value[:7], opacity)
+                    self.assertGreaterEqual(theme.contrast(resolve(foreground), composite), 4.5, foreground)
 
 
 class BootstrapTests(unittest.TestCase):

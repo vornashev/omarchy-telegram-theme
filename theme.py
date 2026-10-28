@@ -76,6 +76,7 @@ def palette(source, overrides=None):
     badge_bg = readable(accent, fg)
     badge_muted_bg = readable(blend(bg, fg, .2), fg)
     link = readable(accent, bg)
+    toast_bg = blend(bg, '#111111', .85)
     base = BASE.read_text()
     result = {}
     for name, value in re.findall(r'^(\w+):\s*(#[0-9a-fA-F]{6}(?:[0-9a-fA-F]{2})?|\w+)\s*;', base, re.M):
@@ -146,6 +147,12 @@ def palette(source, overrides=None):
         'titleBg': panel, 'titleBgActive': bg,
         'emojiPanBg': bg, 'emojiPanHeaderBg': bg, 'emojiPanCategories': panel,
         'notificationBg': bg, 'botKbBg': over, 'botKbDownBg': selected,
+        # Toasts and tooltips overlay arbitrary content, not accent buttons.
+        # Their shared fallback windowFgActive may be black in light accents.
+        'toastBg': toast_bg, 'toastFg': '#ffffff',
+        'tooltipBg': toast_bg, 'tooltipFg': '#ffffff', 'tooltipBorderFg': toast_bg,
+        'importantTooltipBg': toast_bg, 'importantTooltipFg': '#ffffff',
+        'importantTooltipFgLink': readable(accent, toast_bg),
         # Media overlays stay dark even when the theme uses dark button text.
         # Do not inherit windowFgActive here: it may legitimately be black.
         'mediaviewBg': '#111111f2', 'mediaviewVideoBg': '#000000',

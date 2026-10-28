@@ -6,6 +6,8 @@
 
 **Первый импорт файла в Telegram выполняется вручную один раз.** После этого Telegram отслеживает изменения файла. Скрипт не входит в аккаунт, не отправляет сообщения и не редактирует `tdata`.
 
+Уведомления об успешной пересылке, копировании и другие подсказки используют отдельную контрастную палитру, независимо от цвета текста кнопок.
+
 ## Требования
 
 - Linux, **Python 3.11+** (только стандартная библиотека), `curl` для быстрой установки либо `git` для клонирования.
@@ -18,7 +20,7 @@
 Скачать и запустить установщик релиза:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/vornashev/omarchy-telegram-theme/v1.0.0/setup.py -o /tmp/omarchy-telegram-setup.py
+curl -fsSL https://raw.githubusercontent.com/vornashev/omarchy-telegram-theme/v1.0.1/setup.py -o /tmp/omarchy-telegram-setup.py
 python3 /tmp/omarchy-telegram-setup.py install
 ```
 
