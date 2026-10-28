@@ -85,6 +85,9 @@ def palette(source, overrides=None):
     badge_muted_bg = readable(blend(bg, fg, .2), fg)
     link = readable(accent, bg)
     toast_bg = blend(bg, '#111111', .85)
+    # Attachment actions sit on arbitrary photo thumbnails. Use an opaque
+    # theme surface so neither a bright nor a dark photo can hide the icons.
+    attachment_bg = blend(bg, fg, .12)
     base = BASE.read_text()
     result = {}
     for name, value in re.findall(r'^(\w+):\s*(#[0-9a-fA-F]{6}(?:[0-9a-fA-F]{2})?|\w+)\s*;', base, re.M):
@@ -120,6 +123,7 @@ def palette(source, overrides=None):
         'lightButtonBgRipple': selected, 'lightButtonFg': link, 'lightButtonFgOver': link,
         'menuBg': bg, 'menuBgOver': over, 'menuBgRipple': selected,
         'menuIconFg': muted, 'menuIconFgOver': fg,
+        'roundedBg': attachment_bg, 'roundedFg': readable(fg, attachment_bg),
         'boxBg': bg, 'boxTextFg': fg, 'boxTitleFg': fg, 'boxDividerBg': panel,
         'scrollBg': over, 'scrollBarBg': muted, 'scrollBarBgOver': accent,
         'dialogsBg': list_bg, 'dialogsBgOver': over, 'dialogsBgActive': selected,

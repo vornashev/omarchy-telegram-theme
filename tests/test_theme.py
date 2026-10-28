@@ -29,6 +29,9 @@ class ThemeTests(unittest.TestCase):
                     return value if value.startswith('#') else resolve(value, (*seen, key))
                 for key in colors:
                     self.assertRegex(resolve(key), r'^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$')
+                # Attachment edit/delete icons must stay readable over any photo.
+                self.assertEqual(len(resolve('roundedBg')), 7)
+                self.assertGreaterEqual(theme.contrast(resolve('roundedFg'), resolve('roundedBg')), 4.5)
                 surfaces = ('historyBg', 'dialogsBg', 'sideBarBg', 'topBarBg', 'msgInBg', 'msgOutBg')
                 self.assertEqual(len({resolve(k) for k in surfaces}), len(surfaces))
                 self.assertEqual(wallpaper, resolve('historyBg'))
