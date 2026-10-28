@@ -13,10 +13,10 @@ import sys
 import tempfile
 import urllib.request
 
-VERSION = '1.0.1'
+VERSION = '1.1.0'
 REPO = 'vornashev/omarchy-telegram-theme'
 # Verified when this standalone installer downloads release payloads.
-HASHES = {'theme.py': 'bd2a3cdd77f5e6f474871963e77e578815263881d4a82bf399b6af009dca6843', 'assets/base-night.tdesktop-palette': '9f6e0cdf85cad2e9baa33885e7bb102d5f63f06039c920908d3fb29fc50cbd8d'}
+HASHES = {'theme.py': '2f79b243cf4811015f784d0f35ee4edb4cbfcf3db9f9ec96eaa133e1ff49403b', 'assets/base-night.tdesktop-palette': '9f6e0cdf85cad2e9baa33885e7bb102d5f63f06039c920908d3fb29fc50cbd8d'}
 HOME = Path.home()
 CONFIG_HOME = Path(os.environ.get('XDG_CONFIG_HOME', HOME / '.config'))
 DATA_HOME = Path(os.environ.get('XDG_DATA_HOME', HOME / '.local/share'))

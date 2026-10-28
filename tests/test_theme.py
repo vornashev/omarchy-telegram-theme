@@ -18,17 +18,23 @@ spec.loader.exec_module(theme)
 
 class ThemeTests(unittest.TestCase):
     def test_light_and_dark_contrast(self):
-        for bg, fg, accent in [('#2e3440', '#d8dee9', '#81a1c1'), ('#eff1f5', '#4c4f69', '#1e66f5'), ('#101315', '#cacccc', '#798186')]:
+        for bg, fg, accent in [('#2e3440', '#d8dee9', '#81a1c1'), ('#eff1f5', '#4c4f69', '#1e66f5'), ('#101315', '#cacccc', '#798186'), ('#000000', '#ffffff', '#a0a0a0'), ('#ffffff', '#202020', '#2266cc'), ('#1e1e2e', '#cdd6f4', '#89b4fa')]:
             with self.subTest(bg=bg), tempfile.TemporaryDirectory() as tmp:
                 path = Path(tmp) / 'colors.toml'
                 path.write_text(f'background="{bg}"\nforeground="{fg}"\naccent="{accent}"\n')
-                _, colors = theme.palette(path)
+                wallpaper, colors = theme.palette(path)
                 def resolve(key, seen=()):
                     self.assertNotIn(key, seen)
                     value = colors[key]
                     return value if value.startswith('#') else resolve(value, (*seen, key))
                 for key in colors:
                     self.assertRegex(resolve(key), r'^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$')
+                surfaces = ('historyBg', 'dialogsBg', 'sideBarBg', 'topBarBg', 'msgInBg', 'msgOutBg')
+                self.assertEqual(len({resolve(k) for k in surfaces}), len(surfaces))
+                self.assertEqual(wallpaper, resolve('historyBg'))
+                self.assertGreaterEqual(theme.contrast(resolve('historyBg'), resolve('msgInBg')), 1.15)
+                for foreground, background in [('historyTextInFg', 'msgInBg'), ('historyTextOutFg', 'msgOutBg'), ('historyLinkInFg', 'msgInBg'), ('historyLinkOutFg', 'msgOutBg'), ('msgInDateFg', 'msgInBg'), ('msgOutDateFg', 'msgOutBg'), ('dialogsTextFg', 'dialogsBg'), ('dialogsTextFgOver', 'dialogsBgOver'), ('sideBarTextFg', 'sideBarBg'), ('historyComposeAreaFg', 'historyComposeAreaBg')]:
+                    self.assertGreaterEqual(theme.contrast(resolve(foreground), resolve(background)), 4.5, foreground)
                 for state in ('', 'Over', 'Active'):
                     for muted in ('', 'Muted'):
                         self.assertGreaterEqual(theme.contrast(resolve('dialogsUnreadFg' + state), resolve('dialogsUnreadBg' + muted + state)), 4.5)

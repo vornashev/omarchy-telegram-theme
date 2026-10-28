@@ -65,10 +65,18 @@ def palette(source, overrides=None):
             raise ValueError(f'Invalid palette color: {c!r}')
     fg = readable(fg, bg)
     muted = readable(blend(bg, fg, .6), bg)
-    panel = blend(bg, fg, .045)
-    over = blend(bg, fg, .09)
-    out = blend(bg, accent, .22)
-    selected = blend(bg, accent, .38)
+    # Separate the canvas, navigation, panels, and message bubbles.
+    dark = luminance(bg) < luminance(fg)
+    chat = blend(bg, '#000000', .20) if dark else blend(bg, fg, .08)
+    navigation = blend(bg, '#000000', .32) if dark else blend(bg, fg, .09)
+    if navigation == chat:
+        navigation = blend(bg, fg, .012)
+    list_bg = blend(bg, fg, .025)
+    panel = blend(bg, fg, .055 if dark else .012)
+    incoming = blend(bg, fg, .11) if dark else '#ffffff'
+    over = blend(bg, fg, .13)
+    out = blend(bg, accent, .34 if dark else .18)
+    selected = blend(bg, accent, .48 if dark else .32)
     selected_fg = readable(fg, selected)
     button_fg = max(('#ffffff', '#000000'), key=lambda c: contrast(c, accent))
     # Telegram shares one text color between normal and muted unread badges.
@@ -114,32 +122,35 @@ def palette(source, overrides=None):
         'menuIconFg': muted, 'menuIconFgOver': fg,
         'boxBg': bg, 'boxTextFg': fg, 'boxTitleFg': fg, 'boxDividerBg': panel,
         'scrollBg': over, 'scrollBarBg': muted, 'scrollBarBgOver': accent,
-        'dialogsBg': bg, 'dialogsBgOver': over, 'dialogsBgActive': selected,
-        'dialogsNameFg': fg, 'dialogsNameFgOver': fg, 'dialogsNameFgActive': selected_fg,
-        'dialogsTextFg': muted, 'dialogsTextFgOver': muted, 'dialogsTextFgActive': selected_fg,
-        'dialogsDateFg': muted, 'dialogsDateFgOver': muted, 'dialogsDateFgActive': selected_fg,
-        'dialogsTextFgService': link, 'dialogsTextFgServiceOver': link,
+        'dialogsBg': list_bg, 'dialogsBgOver': over, 'dialogsBgActive': selected,
+        'dialogsNameFg': readable(fg, list_bg), 'dialogsNameFgOver': readable(fg, over), 'dialogsNameFgActive': selected_fg,
+        'dialogsTextFg': readable(muted, list_bg), 'dialogsTextFgOver': readable(muted, over), 'dialogsTextFgActive': selected_fg,
+        'dialogsDateFg': readable(muted, list_bg), 'dialogsDateFgOver': readable(muted, over), 'dialogsDateFgActive': selected_fg,
+        'dialogsTextFgService': readable(accent, list_bg), 'dialogsTextFgServiceOver': readable(accent, over),
         'dialogsTextFgServiceActive': selected_fg,
         'dialogsUnreadBg': badge_bg, 'dialogsUnreadFg': fg,
         'dialogsUnreadBgMuted': badge_muted_bg,
         'dialogsUnreadBgOver': badge_bg, 'dialogsUnreadBgMutedOver': badge_muted_bg,
         'dialogsUnreadFgOver': fg, 'dialogsUnreadFgActive': fg,
         'dialogsUnreadBgActive': badge_bg, 'dialogsUnreadBgMutedActive': badge_muted_bg,
-        'historyBg': bg, 'historyTextInFg': fg, 'historyTextOutFg': readable(fg, out),
+        'historyBg': chat, 'historyTextInFg': readable(fg, incoming), 'historyTextOutFg': readable(fg, out),
         'historyTextInFgSelected': selected_fg, 'historyTextOutFgSelected': selected_fg,
-        'historyLinkInFg': link, 'historyLinkOutFg': readable(accent, out),
-        'msgInBg': panel, 'msgOutBg': out,
+        'historyLinkInFg': readable(accent, incoming), 'historyLinkOutFg': readable(accent, out),
+        'msgInBg': incoming, 'msgOutBg': out,
         'msgInBgSelected': selected, 'msgOutBgSelected': selected,
-        'msgInServiceFg': link, 'msgOutServiceFg': readable(accent, out),
-        'msgInDateFg': readable(muted, panel), 'msgOutDateFg': readable(muted, out),
+        'msgInServiceFg': readable(accent, incoming), 'msgOutServiceFg': readable(accent, out),
+        'msgInDateFg': readable(muted, incoming), 'msgOutDateFg': readable(muted, out),
         'msgServiceBg': over, 'msgServiceFg': fg,
-        'msgInMonoFg': fg, 'msgOutMonoFg': readable(fg, out),
-        'historyComposeAreaBg': bg, 'historyComposeAreaFg': fg,
-        'historyComposeAreaFgService': muted, 'historyComposeIconFg': muted,
-        'historyComposeIconFgOver': link, 'historySendIconFg': accent,
-        'topBarBg': bg, 'sideBarBg': panel, 'sideBarBgActive': selected,
-        'sideBarBgRipple': over, 'sideBarTextFg': muted,
-        'sideBarTextFgActive': link, 'sideBarIconFg': muted,
+        'msgInMonoFg': readable(fg, incoming), 'msgOutMonoFg': readable(fg, out),
+        'historyOutIconFg': readable(accent, out, 3),
+        'historySendingOutIconFg': readable(muted, out, 3),
+        'historySendingInIconFg': readable(muted, incoming, 3),
+        'historyComposeAreaBg': panel, 'historyComposeAreaFg': readable(fg, panel),
+        'historyComposeAreaFgService': readable(muted, panel), 'historyComposeIconFg': readable(muted, panel, 3),
+        'historyComposeIconFgOver': readable(accent, panel, 3), 'historySendIconFg': readable(accent, panel, 3),
+        'topBarBg': panel, 'sideBarBg': navigation, 'sideBarBgActive': selected,
+        'sideBarBgRipple': over, 'sideBarTextFg': readable(muted, navigation),
+        'sideBarTextFgActive': readable(accent, selected), 'sideBarIconFg': readable(muted, navigation, 3),
         'sideBarIconFgActive': link, 'sideBarBadgeBg': badge_bg,
         'sideBarBadgeBgMuted': badge_muted_bg, 'sideBarBadgeFg': fg,
         'filterInputActiveBg': over, 'filterInputInactiveBg': panel,
@@ -169,7 +180,7 @@ def palette(source, overrides=None):
     }
     # Forward compatibility: unknown entries are accepted by Telegram.
     result.update(overrides)
-    return bg, result
+    return chat, result
 
 
 def png(color):
