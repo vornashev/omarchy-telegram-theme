@@ -29,15 +29,58 @@ class ThemeTests(unittest.TestCase):
                     return value if value.startswith('#') else resolve(value, (*seen, key))
                 for key in colors:
                     self.assertRegex(resolve(key), r'^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$')
-                # Attachment edit/delete icons must stay readable over any photo.
-                self.assertEqual(len(resolve('roundedBg')), 7)
-                self.assertGreaterEqual(theme.contrast(resolve('roundedFg'), resolve('roundedBg')), 4.5)
+                # Attachment edit/delete pills (roundedBg/roundedFg alias radialBg/radialFg)
+                # and other photo/media overlays must stay readable over pure white photos.
+                self.assertNotIn('roundedBg', colors)
+                self.assertNotIn('roundedFg', colors)
+                for foreground, background in [
+                    ('radialFg', 'radialBg'),
+                    ('stickerPanDeleteFg', 'stickerPanDeleteBg'),
+                    ('historyForwardChooseFg', 'historyForwardChooseBg'),
+                    ('msgDateImgFg', 'msgDateImgBg'),
+                    ('historyIconFgInverted', 'msgDateImgBg'),
+                    ('historyFileThumbIconFg', 'msgDateImgBg'),
+                    ('videoPlayIconFg', 'videoPlayIconBg'),
+                    ('overviewCheckFg', 'overviewCheckBg'),
+                ]:
+                    value = resolve(background)
+                    opacity = int(value[7:], 16) / 255 if len(value) == 9 else 1
+                    composite = theme.blend('#ffffff', value[:7], opacity)
+                    self.assertGreaterEqual(theme.contrast(resolve(foreground)[:7], composite), 4.5, foreground)
+                # Chat avatar initials stay white and semantic userpic gradients stay intact.
+                self.assertEqual(resolve('historyPeerUserpicFg'), '#ffffff')
+                self.assertEqual(resolve('historyPeer4UserpicBg'), '#5caffa')
+                self.assertEqual(resolve('historyPeer5UserpicBg2'), '#6c61df')
+                self.assertGreaterEqual(theme.contrast(resolve('historyPeerUserpicFg'), resolve('historyPeerArchiveUserpicBg')), 4.5)
+                # No remaining unreviewed fallback to windowFgActive (which may be black).
+                self.assertEqual([k for k, v in colors.items() if v == 'windowFgActive'], [])
                 surfaces = ('historyBg', 'dialogsBg', 'sideBarBg', 'topBarBg', 'msgInBg', 'msgOutBg')
                 self.assertEqual(len({resolve(k) for k in surfaces}), len(surfaces))
                 self.assertEqual(wallpaper, resolve('historyBg'))
                 self.assertGreaterEqual(theme.contrast(resolve('historyBg'), resolve('msgInBg')), 1.15)
-                for foreground, background in [('historyTextInFg', 'msgInBg'), ('historyTextOutFg', 'msgOutBg'), ('historyLinkInFg', 'msgInBg'), ('historyLinkOutFg', 'msgOutBg'), ('msgInDateFg', 'msgInBg'), ('msgOutDateFg', 'msgOutBg'), ('dialogsTextFg', 'dialogsBg'), ('dialogsTextFgOver', 'dialogsBgOver'), ('sideBarTextFg', 'sideBarBg'), ('historyComposeAreaFg', 'historyComposeAreaBg')]:
-                    self.assertGreaterEqual(theme.contrast(resolve(foreground), resolve(background)), 4.5, foreground)
+                for foreground, background in [
+                    ('historyTextInFg', 'msgInBg'), ('historyTextOutFg', 'msgOutBg'),
+                    ('historyLinkInFg', 'msgInBg'), ('historyLinkOutFg', 'msgOutBg'),
+                    ('historyLinkInFgSelected', 'msgInBgSelected'), ('historyLinkOutFgSelected', 'msgOutBgSelected'),
+                    ('msgInMonoFgSelected', 'msgInBgSelected'), ('msgOutMonoFgSelected', 'msgOutBgSelected'),
+                    ('msgInDateFg', 'msgInBg'), ('msgOutDateFg', 'msgOutBg'),
+                    ('msgInDateFgSelected', 'msgInBgSelected'), ('msgOutDateFgSelected', 'msgOutBgSelected'),
+                    ('msgServiceFg', 'msgServiceBg'), ('msgServiceFg', 'msgServiceBgSelected'),
+                    ('dialogsTextFg', 'dialogsBg'), ('dialogsTextFgOver', 'dialogsBgOver'),
+                    ('dialogsDraftFgActive', 'dialogsBgActive'),
+                    ('sideBarTextFg', 'sideBarBg'), ('historyComposeAreaFg', 'historyComposeAreaBg'),
+                    ('mainMenuCoverFg', 'mainMenuCoverBg'), ('mainMenuCloudFg', 'mainMenuCloudBg'),
+                    ('dialogsVerifiedIconFg', 'dialogsVerifiedIconBg'),
+                    ('profileVerifiedCheckFg', 'profileVerifiedCheckBg'),
+                    ('overviewCheckFgActive', 'overviewCheckBgActive'),
+                    ('historyFileInIconFg', 'msgFileInBg'), ('historyFileOutIconFg', 'msgFileOutBg'),
+                    ('historyFileInIconFgSelected', 'msgFileInBgSelected'), ('historyFileOutIconFgSelected', 'msgFileOutBgSelected'),
+                    ('historyUnreadBarFg', 'historyUnreadBarBg'), ('searchedBarFg', 'searchedBarBg'),
+                    ('botKbColor', 'botKbBg'),
+                    ('trayCounterFg', 'trayCounterBgMute'),
+                    ('callNameFg', 'callBgOpaque'), ('callBarFg', 'callBarBg'), ('callBarFg', 'callBarBgMuted'),
+                ]:
+                    self.assertGreaterEqual(theme.contrast(resolve(foreground)[:7], resolve(background)[:7]), 4.5, foreground)
                 for state in ('', 'Over', 'Active'):
                     for muted in ('', 'Muted'):
                         self.assertGreaterEqual(theme.contrast(resolve('dialogsUnreadFg' + state), resolve('dialogsUnreadBg' + muted + state)), 4.5)

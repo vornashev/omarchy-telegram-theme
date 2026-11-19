@@ -85,13 +85,18 @@ def palette(source, overrides=None):
     badge_muted_bg = readable(blend(bg, fg, .2), fg)
     link = readable(accent, bg)
     toast_bg = blend(bg, '#111111', .85)
-    # Attachment actions sit on arbitrary photo thumbnails. Use an opaque
-    # theme surface so neither a bright nor a dark photo can hide the icons.
-    attachment_bg = blend(bg, fg, .12)
+    # Overlays over arbitrary photos, videos, and stickers stay dark with white
+    # icons so neither light themes nor bright/dark media hide them.
+    overlay_bg = '#111111cc'
+    media_pill_bg = '#00000099'
     base = BASE.read_text()
     result = {}
     for name, value in re.findall(r'^(\w+):\s*(#[0-9a-fA-F]{6}(?:[0-9a-fA-F]{2})?|\w+)\s*;', base, re.M):
         if not value.startswith('#'):
+            result[name] = value
+            continue
+        if 'UserpicBg' in name:
+            # Keep all semantic avatar gradients intact for white initials.
             result[name] = value
             continue
         h, saturation, light = colorsys.rgb_to_hsv(*rgb(value))
@@ -115,6 +120,7 @@ def palette(source, overrides=None):
         'windowSubTextFg': muted, 'windowSubTextFgOver': muted,
         'windowBgActive': accent, 'windowFgActive': button_fg,
         'windowActiveTextFg': link, 'windowShadowFgFallback': panel,
+        'layerBg': '#0000007f', 'photoCropPointFg': '#ffffff7f',
         'activeButtonBg': accent, 'activeButtonBgOver': blend(accent, fg, .12),
         'activeButtonBgRipple': blend(accent, fg, .2),
         'activeButtonFg': button_fg, 'activeButtonFgOver': button_fg,
@@ -123,45 +129,99 @@ def palette(source, overrides=None):
         'lightButtonBgRipple': selected, 'lightButtonFg': link, 'lightButtonFgOver': link,
         'menuBg': bg, 'menuBgOver': over, 'menuBgRipple': selected,
         'menuIconFg': muted, 'menuIconFgOver': fg,
-        'roundedBg': attachment_bg, 'roundedFg': readable(fg, attachment_bg),
-        'boxBg': bg, 'boxTextFg': fg, 'boxTitleFg': fg, 'boxDividerBg': panel,
+        # Telegram's basic.style aliases roundedBg/roundedFg (used by attachment
+        # preview edit/delete pills and calendar overlays) to radialBg/radialFg.
+        'radialBg': overlay_bg, 'radialFg': '#ffffff',
+        'placeholderFg': readable(blend(bg, fg, .55), bg, 3),
+        'placeholderFgActive': readable(blend(bg, fg, .45), bg, 3),
+        'inputBorderFg': readable(blend(bg, fg, .35), bg, 2),
+        'filterInputBorderFg': accent,
+        'checkboxFg': readable(blend(bg, fg, .5), bg, 3),
+        'boxBg': bg, 'boxTextFg': fg, 'boxTitleFg': fg,
+        'boxDividerBg': panel, 'boxDividerFg': panel,
         'scrollBg': over, 'scrollBarBg': muted, 'scrollBarBgOver': accent,
+        'titleButtonCloseFgOver': '#ffffff',
+        'trayCounterBgMute': '#707070', 'trayCounterFg': '#ffffff',
         'dialogsBg': list_bg, 'dialogsBgOver': over, 'dialogsBgActive': selected,
         'dialogsNameFg': readable(fg, list_bg), 'dialogsNameFgOver': readable(fg, over), 'dialogsNameFgActive': selected_fg,
         'dialogsTextFg': readable(muted, list_bg), 'dialogsTextFgOver': readable(muted, over), 'dialogsTextFgActive': selected_fg,
         'dialogsDateFg': readable(muted, list_bg), 'dialogsDateFgOver': readable(muted, over), 'dialogsDateFgActive': selected_fg,
         'dialogsTextFgService': readable(accent, list_bg), 'dialogsTextFgServiceOver': readable(accent, over),
         'dialogsTextFgServiceActive': selected_fg,
+        'dialogsDraftFgActive': selected_fg,
+        'dialogsSendingIconFgActive': selected_fg, 'dialogsOnlineBadgeFgActive': selected_fg,
+        'dialogsVerifiedIconBg': accent, 'dialogsVerifiedIconBgOver': accent,
+        'dialogsVerifiedIconFg': button_fg, 'dialogsVerifiedIconFgOver': button_fg,
         'dialogsUnreadBg': badge_bg, 'dialogsUnreadFg': fg,
         'dialogsUnreadBgMuted': badge_muted_bg,
         'dialogsUnreadBgOver': badge_bg, 'dialogsUnreadBgMutedOver': badge_muted_bg,
         'dialogsUnreadFgOver': fg, 'dialogsUnreadFgActive': fg,
         'dialogsUnreadBgActive': badge_bg, 'dialogsUnreadBgMutedActive': badge_muted_bg,
+        'searchedBarBg': panel, 'searchedBarFg': readable(muted, panel),
         'historyBg': chat, 'historyTextInFg': readable(fg, incoming), 'historyTextOutFg': readable(fg, out),
         'historyTextInFgSelected': selected_fg, 'historyTextOutFgSelected': selected_fg,
         'historyLinkInFg': readable(accent, incoming), 'historyLinkOutFg': readable(accent, out),
+        'historyLinkInFgSelected': readable(accent, selected), 'historyLinkOutFgSelected': readable(accent, selected),
+        'historyFileNameInFgSelected': selected_fg, 'historyFileNameOutFgSelected': selected_fg,
+        'historyOutIconFgSelected': selected_fg,
+        'historyPeerUserpicFg': '#ffffff',
+        'historyPeerArchiveUserpicBg': '#647280',
+        'historyUnreadBarBg': panel, 'historyUnreadBarFg': readable(fg, panel),
+        'historyForwardChooseBg': overlay_bg, 'historyForwardChooseFg': '#ffffff',
+        'historyPinnedBg': panel,
         'msgInBg': incoming, 'msgOutBg': out,
         'msgInBgSelected': selected, 'msgOutBgSelected': selected,
         'msgInServiceFg': readable(accent, incoming), 'msgOutServiceFg': readable(accent, out),
+        'msgInServiceFgSelected': selected_fg, 'msgOutServiceFgSelected': selected_fg,
         'msgInDateFg': readable(muted, incoming), 'msgOutDateFg': readable(muted, out),
-        'msgServiceBg': over, 'msgServiceFg': fg,
+        'msgInDateFgSelected': selected_fg, 'msgOutDateFgSelected': selected_fg,
+        'msgServiceBg': over, 'msgServiceFg': readable(fg, over),
+        'msgServiceBgSelected': badge_muted_bg,
         'msgInMonoFg': readable(fg, incoming), 'msgOutMonoFg': readable(fg, out),
+        'msgInMonoFgSelected': selected_fg, 'msgOutMonoFgSelected': selected_fg,
+        'msgDateImgBg': media_pill_bg, 'msgDateImgBgOver': '#000000b3', 'msgDateImgFg': '#fffffff2',
+        'historyIconFgInverted': '#ffffffe5', 'historySendingInvertedIconFg': '#ffffffc8',
+        'msgFileInBg': accent, 'msgFileInBgOver': blend(accent, fg, .12), 'msgFileInBgSelected': accent,
+        'msgFileOutBg': accent, 'msgFileOutBgOver': blend(accent, fg, .12), 'msgFileOutBgSelected': accent,
+        'historyFileInIconFg': button_fg, 'historyFileInIconFgSelected': button_fg,
+        'historyFileInRadialFg': button_fg,
+        'historyFileOutIconFg': button_fg, 'historyFileOutIconFgSelected': button_fg,
+        'historyFileOutRadialFg': button_fg,
+        'historyFileThumbIconFg': '#ffffff', 'historyFileThumbIconFgSelected': '#ffffff',
+        'historyFileThumbRadialFg': '#ffffff', 'historyFileThumbRadialFgSelected': '#ffffff',
+        'youtubePlayIconFg': '#ffffff',
+        'videoPlayIconBg': media_pill_bg, 'videoPlayIconFg': '#ffffff',
         'historyOutIconFg': readable(accent, out, 3),
         'historySendingOutIconFg': readable(muted, out, 3),
         'historySendingInIconFg': readable(muted, incoming, 3),
         'historyComposeAreaBg': panel, 'historyComposeAreaFg': readable(fg, panel),
         'historyComposeAreaFgService': readable(muted, panel), 'historyComposeIconFg': readable(muted, panel, 3),
         'historyComposeIconFgOver': readable(accent, panel, 3), 'historySendIconFg': readable(accent, panel, 3),
+        'overviewCheckBg': media_pill_bg, 'overviewCheckFg': '#ffffff', 'overviewCheckBorder': '#ffffff',
+        'overviewCheckBgActive': accent, 'overviewCheckFgActive': button_fg,
+        'profileVerifiedCheckBg': accent, 'profileVerifiedCheckFg': button_fg,
+        'mainMenuCoverBg': selected, 'mainMenuCoverFg': selected_fg,
+        'mainMenuCloudBg': accent, 'mainMenuCloudFg': button_fg,
         'topBarBg': panel, 'sideBarBg': navigation, 'sideBarBgActive': selected,
         'sideBarBgRipple': over, 'sideBarTextFg': readable(muted, navigation),
         'sideBarTextFgActive': readable(accent, selected), 'sideBarIconFg': readable(muted, navigation, 3),
         'sideBarIconFgActive': link, 'sideBarBadgeBg': badge_bg,
-        'sideBarBadgeBgMuted': badge_muted_bg, 'sideBarBadgeFg': fg,
+        'sideBarBadgeBgActive': badge_bg, 'sideBarBadgeBgMuted': badge_muted_bg,
+        'sideBarBadgeBgMutedActive': badge_muted_bg, 'sideBarBadgeFg': fg,
         'filterInputActiveBg': over, 'filterInputInactiveBg': panel,
         'filterInputFg': fg, 'filterInputPlaceholderFg': muted,
         'titleBg': panel, 'titleBgActive': bg,
         'emojiPanBg': bg, 'emojiPanHeaderBg': bg, 'emojiPanCategories': panel,
+        'stickerPanDeleteBg': overlay_bg, 'stickerPanDeleteFg': '#ffffff',
+        'stickerPreviewBg': '#000000b0',
         'notificationBg': bg, 'botKbBg': over, 'botKbDownBg': selected,
+        'botKbColor': readable(fg, over),
+        # Call popups stay dark even on light themes, matching Telegram defaults.
+        'callBg': '#14191ff5', 'callBgOpaque': '#14191f',
+        'callNameFg': '#ffffff', 'callStatusFg': '#aaabac', 'callIconFg': '#ffffff',
+        'callAnswerBg': '#429b50', 'callAnswerRipple': '#388a45',
+        'callHangupBg': '#cc4646', 'callHangupRipple': '#b83c3c',
+        'callBarBg': badge_bg, 'callBarBgMuted': badge_muted_bg, 'callBarFg': fg,
         # Toasts and tooltips overlay arbitrary content, not accent buttons.
         # Their shared fallback windowFgActive may be black in light accents.
         'toastBg': toast_bg, 'toastFg': '#ffffff',
@@ -170,6 +230,7 @@ def palette(source, overrides=None):
         'importantTooltipFgLink': readable(accent, toast_bg),
         # Media overlays stay dark even when the theme uses dark button text.
         # Do not inherit windowFgActive here: it may legitimately be black.
+        'mediaviewFileExtFg': '#ffffff',
         'mediaviewBg': '#111111f2', 'mediaviewVideoBg': '#000000',
         'mediaviewCaptionBg': '#111111ee', 'mediaviewCaptionFg': '#ffffff',
         'mediaviewTextLinkFg': readable(accent, '#222222'),
